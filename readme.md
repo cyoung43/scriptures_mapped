@@ -1,7 +1,4 @@
-#### Chris Young
-#### IS 542 
-#### Project 1
-
+#### Chris Young | IS 542 | Project 1
 ## What I learned:
 In this project, I learned how to use the request object to make calls to the api endpoint. This was very interesting because I had never done that before. I think that I am continuing to learn the benefits of modules. I think that I need to review this project to understand each line and what exactly it is doing in the overall function.  
 I think that I still need to better grasp what the arrow functions are doing with during the `ajax()` call, because I'm just not sure what the data function call is doing.  
