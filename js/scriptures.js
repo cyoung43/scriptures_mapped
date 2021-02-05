@@ -2,13 +2,19 @@
 
 const scriptures = (function () {
     // constants
+    const URL_BASE = 'https://scriptures.byu.edu/'
+    const URL_BOOKS = `${URL_BASE}/mapscrip/model/books.php`
+    const URL_VOLUMES = `${URL_BASE}mapscrip/model/volumes.php`
+
     // private variables
     let books
     let volumes
+
     // private method declarations
     let init
     let cacheBooks
     let ajax
+
     // private methods
     ajax = function (url, successCallBack, failureCallBack) {
         let request = new XMLHttpRequest()
@@ -54,30 +60,27 @@ const scriptures = (function () {
         let booksLoaded = false
         let volumesLoaded = false
 
-        ajax('https://scriptures.byu.edu/mapscrip/model/books.php',
-             data => {
-                 books = data
-                 booksLoaded = true
+        ajax(URL_BOOKS, data => {
+            books = data
+            booksLoaded = true
 
-                 if (volumesLoaded) {
-                     cacheBooks(callback)
-                 }
-             }
-        )
-        ajax('https://scriptures.byu.edu/mapscrip/model/volumes.php',
-             data => {
-                 volumes = data
-                 volumesLoaded = true
+            if (volumesLoaded) {
+                cacheBooks(callback)
+            }
+        })
+        
+        ajax(URL_VOLUMES, data => {
+            volumes = data
+            volumesLoaded = true
 
-                 if (booksLoaded) {
-                     cacheBooks(callback)
-                 }
-             }
-        )
+            if (booksLoaded) {
+                cacheBooks(callback)
+            }
+        })
     }
     // public api
 
     return {
-        init: init
+        init
     }
 }())
