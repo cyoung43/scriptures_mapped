@@ -42,7 +42,10 @@ const Scriptures = (function () {
     let navigateBook
     let navigateChapter
     let navigateHome
+    let nextChapter
     let onHashChanged
+    let previousChapter
+    let titleForBookChapter
     let volumesGridContent
 
     // private methods
@@ -120,6 +123,12 @@ const Scriptures = (function () {
         if (typeof callback === 'function') {
             callback()
         }
+
+        console.log(previousChapter(101, 2))
+        console.log(previousChapter(213, 1))
+        console.log(previousChapter(166, 21))
+        console.log(previousChapter(204, 0))
+        console.log(previousChapter(101, 1))
     }
 
     chaptersGrid = function (book) {
@@ -279,6 +288,36 @@ const Scriptures = (function () {
             
     }
 
+    nextChapter =  function (bookID, chapter) {
+        let book = books[bookID]
+
+        if (book !== undefined) {
+            if (chapter < book.numChapters) {
+                return [
+                    bookID,
+                    chapter + 1,
+                    titleForBookChapter(book, chapter + 1)
+                ]
+            }
+        }
+
+        let nextBook = books[bookID + 1]
+
+        if (nextBook !== undefined) {
+            let nextChapterValue = 0
+
+            if (nextBook.numChapters > 0) {
+                nextChapterValue = 1
+            }
+
+            return [
+                nextBook.id,
+                nextChapterValue,
+                titleForBookChapter(nextBook, nextChapterValue)
+            ]
+        }
+    }
+
     onHashChanged = function () {
         let ids = []
         
@@ -324,6 +363,42 @@ const Scriptures = (function () {
                     }
                 }
             }
+        }
+    }
+
+    previousChapter = function (bookID, chapter) {
+        let book = books[bookID]
+
+        if (book !== undefined) {
+            if (chapter > 1) {
+                return [
+                    bookID,
+                    chapter - 1,
+                    titleForBookChapter(book, chapter - 1)
+                ]
+            }
+
+            let previousBook = books[bookID - 1]
+
+            if (previousBook !== undefined) {
+                let previousChapterValue = previousBook.numChapters
+
+                return [
+                    previousBook.id,
+                    previousChapterValue,
+                    titleForBookChapter(previousBook, previousChapterValue)
+                ]
+            }
+        }
+    }
+
+    titleForBookChapter = function (book, chapter) {
+        if (book !== undefined) {
+            if (chapter > 0) {
+                return `${book.tocName} ${chapter}`
+            }
+
+            return book.tocName
         }
     }
 
