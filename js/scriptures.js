@@ -15,6 +15,7 @@ const Scriptures = (function () {
     const TAG_HEADER5 = 'h5'
     const URL_BASE = 'https://scriptures.byu.edu'
     const URL_BOOKS = `${URL_BASE}/mapscrip/model/books.php`
+    const URL_SCRIPTURES = `${URL_BASE}/mapscrip/mapgetscrip.php`
     const URL_VOLUMES = `${URL_BASE}/mapscrip/model/volumes.php`
 
     // private variables
@@ -29,6 +30,9 @@ const Scriptures = (function () {
     let cacheBooks
     let chaptersGrid
     let chaptersGridContent
+    let encodedScripturesUrlParameters
+    let getScripturesCallback
+    let getScripturesFailure
     let htmlAnchor
     let htmlDiv
     let htmlElement
@@ -42,14 +46,14 @@ const Scriptures = (function () {
     let volumesGridContent
 
     // private methods
-    ajax = function (url, successCallBack, failureCallBack) {
+    ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
         let request = new XMLHttpRequest()
 
         request.open(REQUEST_GET, url, true)
 
         request.onload = function () {
             if (request.status >= REQUEST_STATUS_OK && request.status < REQUEST_STATUS_ERROR) {
-                let data = JSON.parse(request.responseText)
+                let data = skipJSONparse? request.response : JSON.parse(request.responseText)
                 if (typeof successCallBack === 'function') {
                     successCallBack(data)
                 }
@@ -148,6 +152,32 @@ const Scriptures = (function () {
         return gridContent
     }
 
+    encodedScripturesUrlParameters = function (bookID, chapter, verses, isJst) {
+        if (bookID !== undefined && chapter !== undefined) {
+            let options = ''
+
+            if (verses !== undefined) {
+                options += verses
+            }
+
+            if (isJst !== undefined) {
+                options += '&jst=JST'
+            }
+
+            return `${URL_SCRIPTURES}?book=${bookID}&chap=${chapter}&verses${options}`
+        }
+    }
+
+    getScripturesCallback = function (chapterHtml) {
+        document.getElementById(DIV_SCRIPTURES).innerHTML = chapterHtml
+
+        // NEEDS WORK: setupMarkers()
+    }   
+
+    getScripturesFailure = function () {
+        document.getElementById(DIV_SCRIPTURES).innerHTML = 'Unable to retrieve chapter contents.'
+    }
+
     htmlAnchor = function (volume) {
         return `<a name='${volume.id}' />`
     }
@@ -238,7 +268,7 @@ const Scriptures = (function () {
     }
 
     navigateChapter = function (bookID, chapter) {
-        console.log('Navigate chapter: ' + bookID + ', ' + chapter)
+        ajax(encodedScripturesUrlParameters(bookID, chapter), getScripturesCallback, getScripturesFailure, true)
     }
 
     navigateHome = function (volumeID) {
@@ -311,7 +341,7 @@ const Scriptures = (function () {
             }
         })
 
-        return gridContent
+        return gridContent + BOTTOM_PADDING
     }
 
     // public api
