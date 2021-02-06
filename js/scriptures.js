@@ -54,6 +54,7 @@ const Scriptures = (function () {
     let onHashChanged
     let previousChapter
     let setupMarkers
+    let showLocation
     let titleForBookChapter
     let volumesGridContent
 
@@ -63,7 +64,14 @@ const Scriptures = (function () {
         //      the gm array
         // NEEDSWORK: create the marker and append it to gmMarkers  
         // how do I build a marker and how do I build it to the map?  
-        console.log(placename, latitude, longitude)
+        let marker = new google.maps.Marker({
+            position: {lat: Number(latitude), lng: Number(longitude)},
+            map,
+            title: placename,
+            animation: google.maps.Animation.DROP
+        })
+
+        gmMarkers.push(marker)
     }
 
     ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
@@ -440,6 +448,10 @@ const Scriptures = (function () {
         })
     }
 
+    showLocation = function () {
+        
+    }
+
     titleForBookChapter = function (book, chapter) {
         if (book !== undefined) {
             if (chapter > 0) {
@@ -471,13 +483,7 @@ const Scriptures = (function () {
 
     return {
         init,
-        onHashChanged
+        onHashChanged,
+        showLocation
     }
 }())
-
-document.querySelectorAll('a[onclick^=\'showLocation(\']').forEach(function (element) {
-    let matches = /.*/.exec(element.getAttribute('onclick'))
-    console.log(matches[0])
-})
-
-matches = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/.exec("showLocation(108,'Assyria',36.359410,43.152887,33.515336,44.551217,0.000000,0.000000,1202300.000000,0.000000,'>')")
