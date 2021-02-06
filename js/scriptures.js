@@ -5,6 +5,7 @@ const Scriptures = (function () {
     const BOTTOM_PADDING = '<br /><br />'
     const CLASS_BOOKS = 'books'
     const CLASS_BTN = 'btn'
+    const CLASS_CHAPTER = 'chapter'
     const CLASS_VOLUME = 'volume'
     const DIV_SCRIPTURES_NAVIGATOR = 'scripnav'
     const DIV_SCRIPTURES = 'scriptures'
@@ -26,6 +27,8 @@ const Scriptures = (function () {
     let booksGrid
     let booksGridContent
     let cacheBooks
+    let chaptersGrid
+    let chaptersGridContent
     let htmlAnchor
     let htmlDiv
     let htmlElement
@@ -115,6 +118,36 @@ const Scriptures = (function () {
         }
     }
 
+    chaptersGrid = function (book) {
+        return htmlDiv({
+            classKey: CLASS_VOLUME,
+            content: htmlElement(TAG_HEADER5, book.fullName)
+        }) + htmlDiv({
+            classKey: CLASS_BOOKS,
+            content: chaptersGridContent(book)
+        })
+    }
+
+    chaptersGridContent = function (book) {
+        let gridContent = ''
+        let chapter = 1
+
+        // grab volume for href string
+        let ids = location.hash.slice(1).split(':')
+
+        while (chapter <= book.numChapters) {
+            gridContent += htmlLink({
+                classKey: `${CLASS_BTN} ${CLASS_CHAPTER}`,
+                id: chapter,
+                href: `#${ids[0]}:${book.id}:${chapter}`,
+                content: chapter
+            })
+            chapter += 1
+        }
+
+        return gridContent
+    }
+
     htmlAnchor = function (volume) {
         return `<a name='${volume.id}' />`
     }
@@ -191,7 +224,17 @@ const Scriptures = (function () {
     }
 
     navigateBook = function (bookID) {
-        console.log('Navigate book: ' + bookID)
+        let book = books[bookID]
+
+        if (book.numChapters <= 1) {
+            navigateChapter(bookID, book.numChapters)
+        }
+        else {
+            document.getElementById(DIV_SCRIPTURES).innerHTML = htmlDiv({
+                id: DIV_SCRIPTURES_NAVIGATOR,
+                content: chaptersGrid(book)
+            })
+        }
     }
 
     navigateChapter = function (bookID, chapter) {
