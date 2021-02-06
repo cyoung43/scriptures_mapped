@@ -13,8 +13,10 @@ const Scriptures = (function () {
     const INDEX_LATITUDE = 3
     const INDEX_LONGITUDE = 4
     const INDEX_FLAG = 11
-    const NAVIGATION = 'The Scriptures'
     const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
+    const NAVIGATION = 'The Scriptures'
+    const NAV_HEADING = 'navheading'
+    const nextPrev = 'skip_'
     const REQUEST_GET = 'GET'
     const REQUEST_STATUS_OK = 200
     const REQUEST_STATUS_ERROR = 400
@@ -36,6 +38,7 @@ const Scriptures = (function () {
     let booksGrid
     let booksGridContent
     let cacheBooks
+    let changeHash
     let chaptersGrid
     let chaptersGridContent
     let clearMarkers
@@ -47,12 +50,14 @@ const Scriptures = (function () {
     let htmlElement
     let htmlLink
     let htmlHashLink
+    let icon
     let init
     let navigateBook
     let navigateChapter
     let navigateHome
-    let navigation
     let nextChapter
+    let nextIcon
+    let nextPrevious
     let onHashChanged
     let previousChapter
     let setupMarkers
@@ -70,7 +75,12 @@ const Scriptures = (function () {
             position: {lat: Number(latitude), lng: Number(longitude)},
             map,
             title: placename,
-            animation: google.maps.Animation.DROP
+            animation: google.maps.Animation.DROP,
+            label: {
+                text: placename,
+                color: '#222222',
+                fontSize: '12px'
+            }
         })
 
         gmMarkers.push(marker)
@@ -131,31 +141,35 @@ const Scriptures = (function () {
                 content: book.gridName
             })
         })
-
+        
         return gridContent
     }
-
+    
     cacheBooks = function (callback) {
         volumes.forEach(volume => {
             let volumeBooks = []
             let bookID = volume.minBookId
-
+            
             while (bookID <= volume.maxBookId) {
                 volumeBooks.push(books[bookID])
                 bookID += 1
             }
             volume.Books = volumeBooks
         })
-
+        
         if (typeof callback === 'function') {
             callback()
         }
-
-        console.log(previousChapter(101, 2))
+        
+        console.log(nextChapter(107, 2))
         console.log(previousChapter(213, 1))
         console.log(previousChapter(166, 21))
         console.log(previousChapter(204, 0))
         console.log(previousChapter(101, 1))
+    }
+    
+    changeHash = function (hashArguments) {
+
     }
 
     chaptersGrid = function (book) {
@@ -215,6 +229,11 @@ const Scriptures = (function () {
     getScripturesCallback = function (chapterHtml) {
         document.getElementById(DIV_SCRIPTURES).innerHTML = chapterHtml
 
+        let ids = location.hash.slice(1).split(':')
+
+        document.getElementsByClassName(NAV_HEADING)[0].innerHTML += nextIcon(nextChapter(Number(ids[1]), Number(ids[2])), previousChapter(Number(ids[1]), Number(ids[2])))
+        document.getElementsByClassName(NAV_HEADING)[1].innerHTML += nextIcon(nextChapter(Number(ids[1]), Number(ids[2])), previousChapter(Number(ids[1]), Number(ids[2])))
+
         setupMarkers()
     }   
 
@@ -271,7 +290,22 @@ const Scriptures = (function () {
     }
     
     htmlHashLink = function (hashArguments, content) {
-        return `<a href='javascript:void(0)' onclick='changeHash(${hashArguments})'>${content}</a>`
+        return `<a href='javascript:void(0)' onclick='changeHash(${hashArguments})' title='${hashArguments[2]}'>${content}</a>`
+    }
+
+    icon = function (classKey, content) {
+        let classString = ''
+        let contentString = ''
+
+        if (classKey !== undefined) {
+            classString = `class = '${classKey}'`
+        }
+
+        if (content !== undefined) {
+            contentString = content
+        }
+        
+        return `<i ${classString}>${contentString}</i>`
     }
 
     init = function (callback) {
@@ -401,6 +435,32 @@ const Scriptures = (function () {
                 nextChapterValue,
                 titleForBookChapter(nextBook, nextChapterValue)
             ]
+        }
+    }
+
+    nextIcon = function (next, previous) {
+        let classString = 'fas fa-chevron-circle-'
+        let left =  'left'
+        let right = 'right'
+
+        if (next !== undefined && previous !== undefined) {
+            return htmlDiv({
+                classKey: 'nextprev',
+                content: htmlHashLink(previous, icon(classString + left)) + '\t' +
+                    htmlHashLink(next, icon(classString + right))
+            })
+        }
+        else if (next !== undefined) {
+            return htmlDiv({
+                classKey: 'nextprev',
+                content: htmlHashLink(next, icon(classString + right))
+            })
+        }
+        else if (previous !== undefined) {
+            return htmlDiv({
+                classKey: 'nextprev',
+                content: htmlHashLink(previous, icon(classString + left))
+            })
         }
     }
 

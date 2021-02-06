@@ -51,6 +51,8 @@ img {
     order: -1;
 }
 
+#about {display:none} 
+
 #centerhead {
     display: flex;
     flex: 1;
