@@ -9,6 +9,11 @@ const Scriptures = (function () {
     const CLASS_VOLUME = 'volume'
     const DIV_SCRIPTURES_NAVIGATOR = 'scripnav'
     const DIV_SCRIPTURES = 'scriptures'
+    const INDEX_PLACENAME = 2
+    const INDEX_LATITUDE = 3
+    const INDEX_LONGITUDE = 4
+    const INDEX_FLAG = 11
+    const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
     const REQUEST_GET = 'GET'
     const REQUEST_STATUS_OK = 200
     const REQUEST_STATUS_ERROR = 400
@@ -20,9 +25,11 @@ const Scriptures = (function () {
 
     // private variables
     let books
+    let gmMarkers = []
     let volumes
 
     // private method declarations
+    let addMarker
     let ajax
     let bookChapterValid
     let booksGrid
@@ -30,6 +37,7 @@ const Scriptures = (function () {
     let cacheBooks
     let chaptersGrid
     let chaptersGridContent
+    let clearMarkers
     let encodedScripturesUrlParameters
     let getScripturesCallback
     let getScripturesFailure
@@ -45,10 +53,19 @@ const Scriptures = (function () {
     let nextChapter
     let onHashChanged
     let previousChapter
+    let setupMarkers
     let titleForBookChapter
     let volumesGridContent
 
     // private methods
+    addMarker = function (placename, latitude, longitude) {
+        // NEEDSWORK: check if we already have this longitude/latitude in
+        //      the gm array
+        // NEEDSWORK: create the marker and append it to gmMarkers  
+        // how do I build a marker and how do I build it to the map?  
+        console.log(placename, latitude, longitude)
+    }
+
     ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
         let request = new XMLHttpRequest()
 
@@ -161,6 +178,14 @@ const Scriptures = (function () {
         return gridContent
     }
 
+    clearMarkers = function () {
+        gmMarkers.forEach(function (marker) {
+            marker.setMap(null)
+        })
+
+        gmMarkers = []
+    }
+
     encodedScripturesUrlParameters = function (bookID, chapter, verses, isJst) {
         if (bookID !== undefined && chapter !== undefined) {
             let options = ''
@@ -180,7 +205,7 @@ const Scriptures = (function () {
     getScripturesCallback = function (chapterHtml) {
         document.getElementById(DIV_SCRIPTURES).innerHTML = chapterHtml
 
-        // NEEDS WORK: setupMarkers()
+        setupMarkers()
     }   
 
     getScripturesFailure = function () {
@@ -392,6 +417,29 @@ const Scriptures = (function () {
         }
     }
 
+    setupMarkers = function () {
+        if (gmMarkers .length > 0) {
+            clearMarkers()
+        }
+
+        document.querySelectorAll('a[onclick^=\'showLocation(\']').forEach(function (element) {
+            let matches = LAT_LONG_PARSER.exec(element.getAttribute('onclick'))
+
+            if (matches) {
+                let placename = matches[INDEX_PLACENAME]
+                let latitude = matches[INDEX_LATITUDE]
+                let longitude = matches[INDEX_LONGITUDE]
+                let flag = matches[INDEX_FLAG]
+
+                if (flag !== '') {
+                    placename = `${placename} ${flag}`
+                }
+
+                addMarker(placename, latitude, longitude)
+            }
+        })
+    }
+
     titleForBookChapter = function (book, chapter) {
         if (book !== undefined) {
             if (chapter > 0) {
@@ -426,3 +474,10 @@ const Scriptures = (function () {
         onHashChanged
     }
 }())
+
+document.querySelectorAll('a[onclick^=\'showLocation(\']').forEach(function (element) {
+    let matches = /.*/.exec(element.getAttribute('onclick'))
+    console.log(matches[0])
+})
+
+matches = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/.exec("showLocation(108,'Assyria',36.359410,43.152887,33.515336,44.551217,0.000000,0.000000,1202300.000000,0.000000,'>')")
