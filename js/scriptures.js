@@ -13,6 +13,7 @@ const Scriptures = (function () {
     const INDEX_LATITUDE = 3
     const INDEX_LONGITUDE = 4
     const INDEX_FLAG = 11
+    const NAVIGATION = 'The Scriptures'
     const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
     const REQUEST_GET = 'GET'
     const REQUEST_STATUS_OK = 200
@@ -50,6 +51,7 @@ const Scriptures = (function () {
     let navigateBook
     let navigateChapter
     let navigateHome
+    let navigation
     let nextChapter
     let onHashChanged
     let previousChapter
@@ -307,10 +309,49 @@ const Scriptures = (function () {
                 content: chaptersGrid(book)
             })
         }
+
+        let ids = location.hash.slice(1).split(':')
+        let volume = volumes[ids[0] - 1]
+        if (bookID) {
+            document.getElementById('crumb').innerHTML = `${htmlLink({
+                classKey: CLASS_BTN,
+                id: volume.id,
+                href: `#`,
+                content: NAVIGATION
+            })} > ${htmlLink({
+                classKey: CLASS_BTN,
+                id: book.id,
+                href: `#${volume.id}`,
+                content: volume.fullName
+            })} > ${book.fullName}` 
+        }
+
     }
 
     navigateChapter = function (bookID, chapter) {
         ajax(encodedScripturesUrlParameters(bookID, chapter), getScripturesCallback, getScripturesFailure, true)
+
+        let ids = location.hash.slice(1).split(':')
+        let volume = volumes[ids[0] - 1]
+        let book = books[bookID]
+        if (chapter) {
+            document.getElementById('crumb').innerHTML = `${htmlLink({
+                classKey: CLASS_BTN,
+                id: volume.id,
+                href: `#`,
+                content: NAVIGATION
+            })} > ${htmlLink({
+                classKey: CLASS_BTN,
+                id: book.id,
+                href: `#${volume.id}`,
+                content: volume.fullName
+            })} > ${htmlLink({
+                classKey: CLASS_BTN,
+                id: chapter,
+                href: `#${volume.id}:${book.id}`,
+                content: book.fullName
+            })} > ${chapter}` 
+        }
     }
 
     navigateHome = function (volumeID) {
@@ -318,6 +359,18 @@ const Scriptures = (function () {
             id: DIV_SCRIPTURES_NAVIGATOR,
             content: volumesGridContent(volumeID)
         })
+
+        document.getElementById('crumb').innerHTML = NAVIGATION
+
+        if (volumeID) {
+            let volume = volumes[volumeID - 1]
+            document.getElementById('crumb').innerHTML = `${htmlLink({
+                classKey: CLASS_BTN,
+                id: volume.id,
+                href: `#`,
+                content: NAVIGATION
+            })} > ${volume.fullName}` 
+        }
             
     }
 
