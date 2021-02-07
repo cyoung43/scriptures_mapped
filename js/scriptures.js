@@ -57,7 +57,6 @@ const Scriptures = (function () {
     let navigateHome
     let nextChapter
     let nextIcon
-    let nextPrevious
     let onHashChanged
     let previousChapter
     let setupMarkers
@@ -69,8 +68,6 @@ const Scriptures = (function () {
     addMarker = function (placename, latitude, longitude) {
         // NEEDSWORK: check if we already have this longitude/latitude in
         //      the gm array
-        // NEEDSWORK: create the marker and append it to gmMarkers  
-        // how do I build a marker and how do I build it to the map?  
         let marker = new google.maps.Marker({
             position: {lat: Number(latitude), lng: Number(longitude)},
             map,
@@ -84,6 +81,7 @@ const Scriptures = (function () {
         })
 
         gmMarkers.push(marker)
+        console.log(gmMarkers)
     }
 
     ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
@@ -169,7 +167,10 @@ const Scriptures = (function () {
     }
     
     changeHash = function (hashArguments) {
-
+        let hash = hashArguments.split(',')
+        let book = books[hash[0]]
+        
+        location.hash = `#${book.parentBookId}:${Number(hash[0])}:${Number(hash[1])}`
     }
 
     chaptersGrid = function (book) {
@@ -290,7 +291,9 @@ const Scriptures = (function () {
     }
     
     htmlHashLink = function (hashArguments, content) {
-        return `<a href='javascript:void(0)' onclick='changeHash(${hashArguments})' title='${hashArguments[2]}'>${content}</a>`
+        // error with the changeHash function receiving chapter name (missing ')' after hashArguments?)
+        // had to add "" around the parameter in the function call
+        return `<a href='javascript:void(0)' onclick='Scriptures.changeHash("${hashArguments}")' title='${hashArguments[2]}'>${content}</a>`
     }
 
     icon = function (classKey, content) {
@@ -597,6 +600,7 @@ const Scriptures = (function () {
     return {
         init,
         onHashChanged,
-        showLocation
+        showLocation,
+        changeHash
     }
 }())
