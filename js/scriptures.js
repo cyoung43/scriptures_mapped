@@ -16,7 +16,7 @@ const Scriptures = (function () {
     const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
     const NAVIGATION = 'The Scriptures'
     const NAV_HEADING = 'navheading'
-    const nextPrev = 'skip_'
+    const REFRESH = 'Refresh Map'
     const REQUEST_GET = 'GET'
     const REQUEST_STATUS_OK = 200
     const REQUEST_STATUS_ERROR = 400
@@ -25,7 +25,7 @@ const Scriptures = (function () {
     const URL_BOOKS = `${URL_BASE}/mapscrip/model/books.php`
     const URL_SCRIPTURES = `${URL_BASE}/mapscrip/mapgetscrip.php`
     const URL_VOLUMES = `${URL_BASE}/mapscrip/model/volumes.php`
-    const ZOOM_INITIALIZER = 0
+    const ZOOM_LEVEL = 12
 
     // private variables
     let books
@@ -306,22 +306,30 @@ const Scriptures = (function () {
     htmlHashLink = function (hashArguments, content) {
         // error with the changeHash function receiving chapter name (missing ')' after hashArguments?)
         // had to add "" around the parameter in the function call
-        return `<a href='javascript:void(0)' onclick='Scriptures.changeHash("${hashArguments}")' title='${hashArguments[2]}'>${content}</a>`
+        // I want a refresh button too for the map
+
+        if (hashArguments !== undefined) {
+            return `<a href='javascript:void(0)' onclick='Scriptures.changeHash("${hashArguments}")' title='${hashArguments[2]}'>${content}</a>`
+        }
+        else {
+            return `<a href='javascript:void(0)' onclick='Scriptures.setZoom()' title='${REFRESH}'>${content}</a>`
+        }
+
     }
 
-    icon = function (classKey, content) {
+    icon = function (classKey, flag) {
         let classString = ''
-        let contentString = ''
+        let sizeString = ''
 
         if (classKey !== undefined) {
             classString = `class = '${classKey}'`
         }
 
-        if (content !== undefined) {
-            contentString = content
+        if (flag) {
+            sizeString = 'style="font-size:1rem"'
         }
         
-        return `<i ${classString}>${contentString}</i>`
+        return `<i ${classString} ${sizeString}></i>`
     }
 
     init = function (callback) {
@@ -456,6 +464,7 @@ const Scriptures = (function () {
 
     nextIcon = function (next, previous) {
         let classString = 'fas fa-chevron-circle-'
+        let refreshString = 'fas fa-sync'
         let left =  'left'
         let right = 'right'
 
@@ -463,6 +472,7 @@ const Scriptures = (function () {
             return htmlDiv({
                 classKey: 'nextprev',
                 content: htmlHashLink(previous, icon(classString + left)) + '\t' +
+                    htmlHashLink(undefined, icon(refreshString, true)) + '\t' +
                     htmlHashLink(next, icon(classString + right))
             })
         }
@@ -575,21 +585,34 @@ const Scriptures = (function () {
                 addMarker(placename, latitude, longitude)
             }
         })
-        console.log(gmMarkers)
         setZoom()
     }
 
     setZoom = function () {
         let bounds = new google.maps.LatLngBounds()
-        gmMarkers.map(location => {
+
+        // in case there is only one marker, need to not zoom in so much
+        if (gmMarkers.length === 1) {
             bounds.extend(location.getPosition())
             map.fitBounds(bounds)
-        })
-
+            map.setZoom(ZOOM_LEVEL)
+        }
+        else {
+            gmMarkers.map(location => {
+                bounds.extend(location.getPosition())
+                map.fitBounds(bounds)
+            })
+        }
     }
 
     showLocation = function (geotagId, placename, latitude, longitude, viewLatitude, viewLongitude, viewTilt, viewRoll, viewAltitude, viewHeading) {
         console.log(geotagId + ' ' + placename + ' ' + latitude + ' ' + longitude + ' ' + viewLatitude + ' ' + viewLongitude + ' ' + viewTilt + ' ' + viewRoll + ' ' + viewAltitude + ' ' + viewHeading)
+        
+        let bounds = new google.maps.LatLngBounds()
+
+        bounds.extend({lat: Number(latitude), lng: Number(longitude)})
+        map.fitBounds(bounds)
+        map.setZoom(ZOOM_LEVEL)
     }
 
     titleForBookChapter = function (book, chapter) {
@@ -622,9 +645,10 @@ const Scriptures = (function () {
     // public api
 
     return {
+        changeHash,
         init,
         onHashChanged,
-        showLocation,
-        changeHash
+        setZoom,
+        showLocation
     }
 }())
