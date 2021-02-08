@@ -25,6 +25,7 @@ const Scriptures = (function () {
     const URL_BOOKS = `${URL_BASE}/mapscrip/model/books.php`
     const URL_SCRIPTURES = `${URL_BASE}/mapscrip/mapgetscrip.php`
     const URL_VOLUMES = `${URL_BASE}/mapscrip/model/volumes.php`
+    const ZOOM_INITIALIZER = 0
 
     // private variables
     let books
@@ -60,28 +61,40 @@ const Scriptures = (function () {
     let onHashChanged
     let previousChapter
     let setupMarkers
+    let setZoom
     let showLocation
     let titleForBookChapter
     let volumesGridContent
 
     // private methods
     addMarker = function (placename, latitude, longitude) {
-        // NEEDSWORK: check if we already have this longitude/latitude in
-        //      the gm array
-        let marker = new google.maps.Marker({
-            position: {lat: Number(latitude), lng: Number(longitude)},
-            map,
-            title: placename,
-            animation: google.maps.Animation.DROP,
-            label: {
-                text: placename,
-                color: '#222222',
-                fontSize: '12px'
+        let duplicate = false
+
+        gmMarkers.map(location => {
+            if (Number(latitude) === location.position.lat() && Number(longitude) === location.position.lng()) {
+                duplicate = true
+
+                if (!location.title.includes(placename)) {
+                    location.title += `, ${placename}`
+                }   
             }
         })
 
-        gmMarkers.push(marker)
-        console.log(gmMarkers)
+        if (!duplicate) {
+            let marker = new google.maps.Marker({
+                position: {lat: Number(latitude), lng: Number(longitude)},
+                map,
+                title: placename,
+                animation: google.maps.Animation.DROP,
+                label: {
+                    text: placename,
+                    color: '#222222',
+                    fontSize: '12px'
+                }
+            })
+
+            gmMarkers.push(marker)
+        }
     }
 
     ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
@@ -542,7 +555,7 @@ const Scriptures = (function () {
     }
 
     setupMarkers = function () {
-        if (gmMarkers .length > 0) {
+        if (gmMarkers.length > 0) {
             clearMarkers()
         }
 
@@ -562,10 +575,21 @@ const Scriptures = (function () {
                 addMarker(placename, latitude, longitude)
             }
         })
+        console.log(gmMarkers)
+        setZoom()
     }
 
-    showLocation = function () {
-        
+    setZoom = function () {
+        let bounds = new google.maps.LatLngBounds()
+        gmMarkers.map(location => {
+            bounds.extend(location.getPosition())
+            map.fitBounds(bounds)
+        })
+
+    }
+
+    showLocation = function (geotagId, placename, latitude, longitude, viewLatitude, viewLongitude, viewTilt, viewRoll, viewAltitude, viewHeading) {
+        console.log(geotagId + ' ' + placename + ' ' + latitude + ' ' + longitude + ' ' + viewLatitude + ' ' + viewLongitude + ' ' + viewTilt + ' ' + viewRoll + ' ' + viewAltitude + ' ' + viewHeading)
     }
 
     titleForBookChapter = function (book, chapter) {
