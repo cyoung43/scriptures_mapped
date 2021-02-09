@@ -308,7 +308,7 @@ const Scriptures = (function () {
     }
     
     htmlHashLink = function (hashArguments, content) {
-        // error with the changeHash function receiving chapter name (missing ')' after hashArguments?)
+        // error with the changeHash function receiving chapter name (missing '') after hashArguments?)
         // had to add "" around the parameter in the function call
         // I want a refresh button too for the map
 
