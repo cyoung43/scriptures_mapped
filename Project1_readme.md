@@ -1,4 +1,6 @@
 ### Chris Young | IS 542 | Project 1  
+
+See my site published here(http://scripturemapper.chryoung.org/) !
   
 In this project, I learned:
 * How to segment code into separate, specific functions. In this project, I really saw the power and flexibility of having separate functions for each task/feature that you want in your code. It was really interesting to see how you can pass variables to a function that creates an HTML element. With these simple functions, code becomes much more elegant and efficient, rather than being so repetitive.
