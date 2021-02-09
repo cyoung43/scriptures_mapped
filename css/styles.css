@@ -273,3 +273,7 @@ span.verse {
 li.match {
     background-color: #ffffcc;
 }
+
+.label {
+    background-color: rgb(10, 9, 9);
+}

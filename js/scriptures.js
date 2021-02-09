@@ -76,6 +76,7 @@ const Scriptures = (function () {
 
                 if (!location.title.includes(placename)) {
                     location.title += `, ${placename}`
+                    location.label.text += `, ${placename}`
                 }   
             }
         })
@@ -84,12 +85,20 @@ const Scriptures = (function () {
             let marker = new google.maps.Marker({
                 position: {lat: Number(latitude), lng: Number(longitude)},
                 map,
+                // adapted from https://stackoverflow.com/questions/37441729/google-maps-custom-label-x-and-y-position
+                icon: {
+                    url: '../css/Google_Maps_Icon.png',
+                    size: new google.maps.Size(32, 38),
+                    scaledSize: new google.maps.Size(35, 38),
+                    labelOrigin: new google.maps.Point(Number(latitude) + 20, Number(longitude) + 7)
+                },
                 title: placename,
                 animation: google.maps.Animation.DROP,
                 label: {
                     text: placename,
                     color: '#222222',
-                    fontSize: '12px'
+                    fontSize: '1rem',
+                    backgroundColor: '#5A4A47'
                 }
             })
 
@@ -171,12 +180,6 @@ const Scriptures = (function () {
         if (typeof callback === 'function') {
             callback()
         }
-        
-        console.log(nextChapter(107, 2))
-        console.log(previousChapter(213, 1))
-        console.log(previousChapter(166, 21))
-        console.log(previousChapter(204, 0))
-        console.log(previousChapter(101, 1))
     }
     
     changeHash = function (hashArguments) {
