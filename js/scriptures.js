@@ -1,4 +1,10 @@
-// Chris Young | The Scriptures, Mapped | IS542
+/*********************************************************************************
+Author: Chris Young
+Project: The Scriptures, Mapped
+Class: IS 452
+Date: 9 February 2021
+Version: 1.0
+*********************************************************************************/
 
 const Scriptures = (function () {
     // constants
@@ -16,7 +22,7 @@ const Scriptures = (function () {
     const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
     const NAVIGATION = 'The Scriptures'
     const NAV_HEADING = 'navheading'
-    const REFRESH = 'Refresh Map'
+    const REFRESH = 'Reset Map'
     const REQUEST_GET = 'GET'
     const REQUEST_STATUS_OK = 200
     const REQUEST_STATUS_ERROR = 400
@@ -74,31 +80,26 @@ const Scriptures = (function () {
             if (Number(latitude) === location.position.lat() && Number(longitude) === location.position.lng()) {
                 duplicate = true
 
-                if (!location.title.includes(placename)) {
-                    location.title += `, ${placename}`
-                    location.label.text += `, ${placename}`
+                if (!location.labelContent.includes(placename)) {
+                    location.labelContent += `, ${placename}`
                 }   
             }
         })
 
         if (!duplicate) {
-            let marker = new google.maps.Marker({
+
+            // adapted from https://stackoverflow.com/questions/37441729/google-maps-custom-label-x-and-y-position
+            let marker = new MarkerWithLabel({
                 position: {lat: Number(latitude), lng: Number(longitude)},
+                clickable: true,
+                draggable: false,
                 map,
-                // adapted from https://stackoverflow.com/questions/37441729/google-maps-custom-label-x-and-y-position
-                icon: {
-                    url: '../css/Google_Maps_Icon.png',
-                    size: new google.maps.Size(32, 38),
-                    scaledSize: new google.maps.Size(35, 38),
-                    labelOrigin: new google.maps.Point(Number(latitude) + 20, Number(longitude) + 7)
-                },
-                title: placename,
                 animation: google.maps.Animation.DROP,
-                label: {
-                    text: placename,
-                    color: '#222222',
-                    fontSize: '1rem',
-                    backgroundColor: '#5A4A47'
+                labelContent: placename,
+                labelClass: "labels",
+                labelStyle: {
+                    opacity: .2,
+                    backgroundColor: "white"
                 }
             })
 
@@ -596,7 +597,7 @@ const Scriptures = (function () {
 
         // in case there is only one marker, need to not zoom in so much
         if (gmMarkers.length === 1) {
-            bounds.extend(location.getPosition())
+            bounds.extend(gmMarkers[0].getPosition())
             map.fitBounds(bounds)
             map.setZoom(ZOOM_LEVEL)
         }

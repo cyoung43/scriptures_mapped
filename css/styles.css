@@ -274,6 +274,15 @@ li.match {
     background-color: #ffffcc;
 }
 
-.label {
-    background-color: rgb(10, 9, 9);
-}
+.labels {
+    color: black;
+    background-color: white;
+    font-family: Roboto, Arial, sans-serif;
+    font-size: 12px;
+    text-align: center;
+    border-style: solid;
+    border-width: thin;
+    border-color: black;
+    white-space: nowrap;
+    padding: 3px;
+  }
