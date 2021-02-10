@@ -31,7 +31,7 @@ const Scriptures = (function () {
     const URL_BOOKS = `${URL_BASE}/mapscrip/model/books.php`
     const URL_SCRIPTURES = `${URL_BASE}/mapscrip/mapgetscrip.php`
     const URL_VOLUMES = `${URL_BASE}/mapscrip/model/volumes.php`
-    const ZOOM_LEVEL = 12
+    const ZOOM_LEVEL = 13
 
     // private variables
     let books
@@ -40,6 +40,7 @@ const Scriptures = (function () {
 
     // private method declarations
     let addMarker
+    let singleMarker
     let ajax
     let bookChapterValid
     let booksGrid
@@ -75,35 +76,34 @@ const Scriptures = (function () {
     // private methods
     addMarker = function (placename, latitude, longitude) {
         let duplicate = false
+        let count = 0
+        let flag = false
+        let element
 
         gmMarkers.map(location => {
             if (Number(latitude) === location.position.lat() && Number(longitude) === location.position.lng()) {
                 duplicate = true
 
                 if (!location.labelContent.includes(placename)) {
-                    location.labelContent += `, ${placename}`
+                    // create a new marker with updated label, and then remove the previous label
+                    singleMarker(location.labelContent + `, ${placename}`, latitude, longitude)
+
+                    // set delete flag to true and get element to delete
+                    element = count
+                    flag = true
                 }   
+            }
+            else {
+                count += 1
             }
         })
 
         if (!duplicate) {
-
-            // adapted from https://stackoverflow.com/questions/37441729/google-maps-custom-label-x-and-y-position
-            let marker = new MarkerWithLabel({
-                position: {lat: Number(latitude), lng: Number(longitude)},
-                clickable: true,
-                draggable: false,
-                map,
-                animation: google.maps.Animation.DROP,
-                labelContent: placename,
-                labelClass: "labels",
-                labelStyle: {
-                    opacity: .2,
-                    backgroundColor: "white"
-                }
-            })
-
-            gmMarkers.push(marker)
+            // markerLabel adapted from https://github.com/googlemaps/js-markerwithlabel
+            singleMarker(placename, latitude, longitude)
+        }
+        else if (flag) {
+            gmMarkers.splice(element, 1)
         }
     }
 
@@ -617,6 +617,24 @@ const Scriptures = (function () {
         bounds.extend({lat: Number(latitude), lng: Number(longitude)})
         map.fitBounds(bounds)
         map.setZoom(ZOOM_LEVEL)
+    }
+
+    singleMarker = function (placename, latitude, longitude) {
+        let marker = new MarkerWithLabel({
+            position: {lat: Number(latitude), lng: Number(longitude)},
+            clickable: true,
+            draggable: false,
+            map,
+            animation: google.maps.Animation.DROP,
+            labelContent: placename,
+            labelClass: "labels",
+            labelStyle: {
+                opacity: .2,
+                backgroundColor: "white"
+            }
+        })
+
+        gmMarkers.push(marker)
     }
 
     titleForBookChapter = function (book, chapter) {
