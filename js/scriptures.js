@@ -108,26 +108,30 @@ const Scriptures = (function () {
     }
 
     ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
-        let request = new XMLHttpRequest()
+        fetch(url).then(
+            response => {
+                if (response.ok) {
+                    if (skipJSONparse) {
+                        return response.text()
+                    }
 
-        request.open(REQUEST_GET, url, true)
-
-        request.onload = function () {
-            if (request.status >= REQUEST_STATUS_OK && request.status < REQUEST_STATUS_ERROR) {
-                let data = skipJSONparse? request.response : JSON.parse(request.responseText)
-                if (typeof successCallBack === 'function') {
-                    successCallBack(data)
+                    return response.json()
                 }
             }
-            else {
+        ).then(
+            result => {
+                successCallBack(result)
+            }
+        ).catch(
+            function (error) {
                 if (typeof failureCallBack === 'function') {
-                    failureCallBack(request)
+                    failureCallBack()
+                }
+                else {
+                    console.log('Error: ', error.message)
                 }
             }
-        }
-
-        request.onerror = failureCallBack
-        request.send()
+        )
     }
 
     bookChapterValid =  function (bookID, chapter) {
