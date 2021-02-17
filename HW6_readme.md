@@ -1,8 +1,8 @@
 ### Chris Young | IS542 | Homework 6
 
 #### Switching the API from XMLHttpRequest to Fetch:
-What I thought would initially be an 'easier' homework quickly became more complicated when I ran into errors with the promise object. At first, I could not figure out how to access the resolved promise and send the necessary data to my `scripturesCallback` function. I ended up reading documentation on the Mozilla Developer Network on how I could better use the `fetch` api call and be able to make it work.
-In the class example, we used an explict `function` keyword within the `then` statements to fulfill the api call. Instead of doing this, I found then when I switched to an arrow function, the `fetch` started working better for me and I was able to receive the needed data from the api. 
+What I thought would initially be an 'easier' homework quickly became more complicated when I ran into errors with the promise object. At first, I could not figure out how to access the resolved promise and send the necessary data to my `scripturesCallback` function. I ended up reading documentation on the Mozilla Developer Network on how I could better use the `fetch` api call and be able to make it work.  
+In the class example, we used an explict `function` keyword within the `then` statements to fulfill the api call. Instead of doing this, I found then when I switched to an arrow function, the `fetch` started working better for me and I was able to receive the needed data from the api.  
 Another part that I learned was how to use `.then()` chaining. In my first `.then()`, I used similar logic to my old `XMLHttpRequest` to check if I should return json or text. Then I chained a second `.then()` that received the results and sent the data to the correct `successCallback` functions.
 
 #### Comparing project code to Dr. Liddle's solution:
