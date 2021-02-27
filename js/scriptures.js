@@ -10,7 +10,7 @@ const Scriptures = (function () {
     // constants
     const BOTTOM_PADDING = '<br /><br />'
     const CLASS_BOOKS = 'books'
-    const CLASS_BTN = 'btn'
+    const CLASS_BTN = 'waves-effect my-btn'
     const CLASS_CHAPTER = 'chapter'
     const CLASS_VOLUME = 'volume'
     const DIV_SCRIPTURES_NAVIGATOR = 'scripnav'
@@ -20,12 +20,10 @@ const Scriptures = (function () {
     const INDEX_LONGITUDE = 4
     const INDEX_FLAG = 11
     const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
+    const LINK = 'link'
     const NAVIGATION = 'The Scriptures'
     const NAV_HEADING = 'navheading'
     const REFRESH = 'Reset Map'
-    const REQUEST_GET = 'GET'
-    const REQUEST_STATUS_OK = 200
-    const REQUEST_STATUS_ERROR = 400
     const TAG_HEADER5 = 'h5'
     const URL_BASE = 'https://scriptures.byu.edu'
     const URL_BOOKS = `${URL_BASE}/mapscrip/model/books.php`
@@ -120,7 +118,7 @@ const Scriptures = (function () {
             }
         ).then(
             result => {
-                successCallBack(result)
+                successCallBack(result  )
             }
         ).catch(
             function (error) {
@@ -230,6 +228,9 @@ const Scriptures = (function () {
         })
 
         gmMarkers = []
+
+        map.setCenter(new google.maps.LatLng(31.7683, 35.2137))
+        map.setZoom(8)
     }
 
     encodedScripturesUrlParameters = function (bookID, chapter, verses, isJst) {
@@ -380,12 +381,12 @@ const Scriptures = (function () {
         let volume = volumes[ids[0] - 1]
         if (bookID) {
             document.getElementById('crumb').innerHTML = `${htmlLink({
-                classKey: CLASS_BTN,
+                classKey: LINK,
                 id: volume.id,
                 href: `#`,
                 content: NAVIGATION
             })} > ${htmlLink({
-                classKey: CLASS_BTN,
+                classKey: LINK,
                 id: book.id,
                 href: `#${volume.id}`,
                 content: volume.fullName
@@ -402,17 +403,17 @@ const Scriptures = (function () {
         let book = books[bookID]
         if (chapter) {
             document.getElementById('crumb').innerHTML = `${htmlLink({
-                classKey: CLASS_BTN,
+                classKey: LINK,
                 id: volume.id,
                 href: `#`,
                 content: NAVIGATION
             })} > ${htmlLink({
-                classKey: CLASS_BTN,
+                classKey: LINK,
                 id: book.id,
                 href: `#${volume.id}`,
                 content: volume.fullName
             })} > ${htmlLink({
-                classKey: CLASS_BTN,
+                classKey: LINK,
                 id: chapter,
                 href: `#${volume.id}:${book.id}`,
                 content: book.fullName
@@ -431,7 +432,7 @@ const Scriptures = (function () {
         if (volumeID) {
             let volume = volumes[volumeID - 1]
             document.getElementById('crumb').innerHTML = `${htmlLink({
-                classKey: CLASS_BTN,
+                classKey: LINK,
                 id: volume.id,
                 href: `#`,
                 content: NAVIGATION
@@ -500,7 +501,8 @@ const Scriptures = (function () {
 
     onHashChanged = function () {
         let ids = []
-        
+        clearMarkers()
+
         if (!volumes) {
             return 'no volumes'
         }
