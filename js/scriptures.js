@@ -6,677 +6,643 @@ Date: 9 February 2021
 Version: 1.0
 *********************************************************************************/
 
-const Scriptures = (function () {
-    // constants
-    const BOTTOM_PADDING = '<br /><br />'
-    const CLASS_BOOKS = 'books'
-    const CLASS_BTN = 'waves-effect my-btn'
-    const CLASS_CHAPTER = 'chapter'
-    const CLASS_VOLUME = 'volume'
-    const DIV_SCRIPTURES_NAVIGATOR = 'scripnav'
-    const DIV_SCRIPTURES = 'scriptures'
-    const INDEX_PLACENAME = 2
-    const INDEX_LATITUDE = 3
-    const INDEX_LONGITUDE = 4
-    const INDEX_FLAG = 11
-    const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
-    const LINK = 'link'
-    const NAVIGATION = 'The Scriptures'
-    const NAV_HEADING = 'navheading'
-    const REFRESH = 'Reset Map'
-    const TAG_HEADER5 = 'h5'
-    const URL_BASE = 'https://scriptures.byu.edu'
-    const URL_BOOKS = `${URL_BASE}/mapscrip/model/books.php`
-    const URL_SCRIPTURES = `${URL_BASE}/mapscrip/mapgetscrip.php`
-    const URL_VOLUMES = `${URL_BASE}/mapscrip/model/volumes.php`
-    const ZOOM_LEVEL = 13
 
-    // private variables
-    let books
-    let gmMarkers = []
-    let volumes
+// constants
+const BOTTOM_PADDING = '<br /><br />'
+const CLASS_BOOKS = 'books'
+const CLASS_BTN = 'waves-effect my-btn'
+const CLASS_CHAPTER = 'chapter'
+const CLASS_VOLUME = 'volume'
+const DIV_SCRIPTURES_NAVIGATOR = 'scripnav'
+const DIV_SCRIPTURES = 'scriptures'
+const INDEX_PLACENAME = 2
+const INDEX_LATITUDE = 3
+const INDEX_LONGITUDE = 4
+const INDEX_FLAG = 11
+const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
+const LINK = 'link'
+const NAVIGATION = 'The Scriptures'
+const NAV_HEADING = 'navheading'
+const REFRESH = 'Reset Map'
+const TAG_HEADER5 = 'h5'
+const URL_BASE = 'https://scriptures.byu.edu'
+const URL_BOOKS = `${URL_BASE}/mapscrip/model/books.php`
+const URL_SCRIPTURES = `${URL_BASE}/mapscrip/mapgetscrip.php`
+const URL_VOLUMES = `${URL_BASE}/mapscrip/model/volumes.php`
+const ZOOM_LEVEL = 13
 
-    // private method declarations
-    let addMarker
-    let singleMarker
-    let ajax
-    let bookChapterValid
-    let booksGrid
-    let booksGridContent
-    let cacheBooks
-    let changeHash
-    let chaptersGrid
-    let chaptersGridContent
-    let clearMarkers
-    let encodedScripturesUrlParameters
-    let getScripturesCallback
-    let getScripturesFailure
-    let htmlAnchor
-    let htmlDiv
-    let htmlElement
-    let htmlLink
-    let htmlHashLink
-    let icon
-    let init
-    let navigateBook
-    let navigateChapter
-    let navigateHome
-    let nextChapter
-    let nextIcon
-    let onHashChanged
-    let previousChapter
-    let setupMarkers
-    let setZoom
-    let showLocation
-    let titleForBookChapter
-    let volumesGridContent
+// private variables
+let books
+let gmMarkers = []
+let volumes
 
-    // private methods
-    addMarker = function (placename, latitude, longitude) {
-        let duplicate = false
-        let count = 0
-        let flag = false
-        let element
+// private methods
+const addMarker = function (placename, latitude, longitude) {
+    let duplicate = false
+    let count = 0
+    let flag = false
+    let element
 
-        gmMarkers.map(location => {
-            if (Number(latitude) === location.position.lat() && Number(longitude) === location.position.lng()) {
-                duplicate = true
+    gmMarkers.map(location => {
+        if (Number(latitude) === location.position.lat() && Number(longitude) === location.position.lng()) {
+            duplicate = true
 
-                if (!location.labelContent.includes(placename)) {
-                    // create a new marker with updated label, and then remove the previous label
-                    singleMarker(location.labelContent + `, ${placename}`, latitude, longitude)
+            if (!location.labelContent.includes(placename)) {
+                // create a new marker with updated label, and then remove the previous label
+                singleMarker(location.labelContent + `, ${placename}`, latitude, longitude)
 
-                    // set delete flag to true and get element to delete
-                    element = count
-                    flag = true
-                }   
+                // set delete flag to true and get element to delete
+                element = count
+                flag = true
+            }   
+        }
+        else {
+            count += 1
+        }
+    })
+
+    if (!duplicate) {
+        // markerLabel adapted from https://github.com/googlemaps/js-markerwithlabel
+        singleMarker(placename, latitude, longitude)
+    }
+    else if (flag) {
+        gmMarkers.splice(element, 1)
+    }
+}
+
+const ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
+    fetch(url).then(
+        response => {
+            if (response.ok) {
+                if (skipJSONparse) {
+                    return response.text()
+                }
+
+                return response.json()
+            }
+        }
+    ).then(
+        result => {
+            successCallBack(result  )
+        }
+    ).catch(
+        function (error) {
+            if (typeof failureCallBack === 'function') {
+                failureCallBack()
             }
             else {
-                count += 1
+                console.log('Error: ', error.message)
             }
+        }
+    )
+}
+
+const bookChapterValid =  function (bookID, chapter) {
+    let book = books[bookID]
+
+    if (book === undefined || chapter < 0 || chapter > book.numChapters) {
+        return false
+    }
+
+    if (chapter === 0 && book.numChapters > 0) {
+        return false
+    }
+
+    return true
+}
+
+const booksGrid = function (volume) {
+    return htmlDiv({
+        classKey: CLASS_BOOKS,
+        content: booksGridContent(volume)
+    })
+}
+
+const booksGridContent = function (volume) {
+    let gridContent = ''
+
+    volume.Books.forEach(function (book) {
+        gridContent += htmlLink({
+            classKey: CLASS_BTN,
+            id: book.id,
+            href: `#${volume.id}:${book.id}`,
+            content: book.gridName
         })
+    })
+    
+    return gridContent
+}
 
-        if (!duplicate) {
-            // markerLabel adapted from https://github.com/googlemaps/js-markerwithlabel
-            singleMarker(placename, latitude, longitude)
-        }
-        else if (flag) {
-            gmMarkers.splice(element, 1)
-        }
-    }
-
-    ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
-        fetch(url).then(
-            response => {
-                if (response.ok) {
-                    if (skipJSONparse) {
-                        return response.text()
-                    }
-
-                    return response.json()
-                }
-            }
-        ).then(
-            result => {
-                successCallBack(result  )
-            }
-        ).catch(
-            function (error) {
-                if (typeof failureCallBack === 'function') {
-                    failureCallBack()
-                }
-                else {
-                    console.log('Error: ', error.message)
-                }
-            }
-        )
-    }
-
-    bookChapterValid =  function (bookID, chapter) {
-        let book = books[bookID]
-
-        if (book === undefined || chapter < 0 || chapter > book.numChapters) {
-            return false
-        }
-
-        if (chapter === 0 && book.numChapters > 0) {
-            return false
-        }
-
-        return true
-    }
-
-    booksGrid = function (volume) {
-        return htmlDiv({
-            classKey: CLASS_BOOKS,
-            content: booksGridContent(volume)
-        })
-    }
-
-    booksGridContent = function (volume) {
-        let gridContent = ''
-
-        volume.Books.forEach(function (book) {
-            gridContent += htmlLink({
-                classKey: CLASS_BTN,
-                id: book.id,
-                href: `#${volume.id}:${book.id}`,
-                content: book.gridName
-            })
-        })
+const cacheBooks = function (callback) {
+    volumes.forEach(volume => {
+        let volumeBooks = []
+        let bookID = volume.minBookId
         
-        return gridContent
-    }
+        while (bookID <= volume.maxBookId) {
+            volumeBooks.push(books[bookID])
+            bookID += 1
+        }
+        volume.Books = volumeBooks
+    })
     
-    cacheBooks = function (callback) {
-        volumes.forEach(volume => {
-            let volumeBooks = []
-            let bookID = volume.minBookId
-            
-            while (bookID <= volume.maxBookId) {
-                volumeBooks.push(books[bookID])
-                bookID += 1
-            }
-            volume.Books = volumeBooks
+    if (typeof callback === 'function') {
+        callback()
+    }
+}
+
+const changeHash = function (hashArguments) {
+    let hash = hashArguments.split(',')
+    let book = books[hash[0]]
+    
+    location.hash = `#${book.parentBookId}:${Number(hash[0])}:${Number(hash[1])}`
+}
+
+const chaptersGrid = function (book) {
+    return htmlDiv({
+        classKey: CLASS_VOLUME,
+        content: htmlElement(TAG_HEADER5, book.fullName)
+    }) + htmlDiv({
+        classKey: CLASS_BOOKS,
+        content: chaptersGridContent(book)
+    })
+}
+
+const chaptersGridContent = function (book) {
+    let gridContent = ''
+    let chapter = 1
+
+    // grab volume for href string
+    let ids = location.hash.slice(1).split(':')
+
+    while (chapter <= book.numChapters) {
+        gridContent += htmlLink({
+            classKey: `${CLASS_BTN} ${CLASS_CHAPTER}`,
+            id: chapter,
+            href: `#${ids[0]}:${book.id}:${chapter}`,
+            content: chapter
         })
-        
-        if (typeof callback === 'function') {
-            callback()
+        chapter += 1
+    }
+
+    return gridContent
+}
+
+const clearMarkers = function () {
+    gmMarkers.forEach(function (marker) {
+        marker.setMap(null)
+    })
+
+    gmMarkers = []
+
+    map.setCenter(new google.maps.LatLng(31.7683, 35.2137))
+    map.setZoom(8)
+}
+
+const encodedScripturesUrlParameters = function (bookID, chapter, verses, isJst) {
+    if (bookID !== undefined && chapter !== undefined) {
+        let options = ''
+
+        if (verses !== undefined) {
+            options += verses
         }
+
+        if (isJst !== undefined) {
+            options += '&jst=JST'
+        }
+
+        return `${URL_SCRIPTURES}?book=${bookID}&chap=${chapter}&verses${options}`
+    }
+}
+
+const getScripturesCallback = function (chapterHtml) {
+    document.getElementById(DIV_SCRIPTURES).innerHTML = chapterHtml
+
+    let ids = location.hash.slice(1).split(':')
+
+    document.getElementsByClassName(NAV_HEADING)[0].innerHTML += nextIcon(nextChapter(Number(ids[1]), Number(ids[2])), previousChapter(Number(ids[1]), Number(ids[2])))
+    document.getElementsByClassName(NAV_HEADING)[1].innerHTML += nextIcon(nextChapter(Number(ids[1]), Number(ids[2])), previousChapter(Number(ids[1]), Number(ids[2])))
+
+    setupMarkers()
+}   
+
+const getScripturesFailure = function () {
+    document.getElementById(DIV_SCRIPTURES).innerHTML = 'Unable to retrieve chapter contents.'
+}
+
+const htmlAnchor = function (volume) {
+    return `<a name='${volume.id}' />`
+}
+
+const htmlDiv = function (parameters) {
+    let classString = ''
+    let contentString = ''
+    let idString = ''
+
+    if (parameters.classKey !== undefined) {
+        classString = `class='${parameters.classKey}'`
+    }
+    if (parameters.content !== undefined) {
+        contentString = parameters.content
+    }
+    if (parameters.id !== undefined) {
+        idString = `id='${parameters.id}'`
+    }
+
+    return `<div ${idString} ${classString}>${contentString}</div>`
+}
+
+const htmlElement = function (tagName, content) {
+    return `<${tagName}>${content}</${tagName}>`
+}
+
+const htmlLink = function (parameters) {
+    let classString = ''
+    let contentString = ''
+    let hrefString = ''
+    let idString = ''
+
+    if (parameters.classKey != undefined) {
+        classString = `class='${parameters.classKey}'`
+    }
+    if (parameters.content !== undefined) {
+        contentString = parameters.content
+    }
+    if (parameters.href !== undefined) {
+        hrefString = `href='${parameters.href}'`
+    }
+    if (parameters.id !== undefined) {
+        idString = `id='${parameters.id}'`
+    }
+
+    return `<a ${idString} ${classString} ${hrefString}>${contentString}</a>`
+}
+
+const htmlHashLink = function (hashArguments, content) {
+    // error with the changeHash function receiving chapter name (missing '') after hashArguments?)
+    // had to add "" around the parameter in the function call
+    // I want a refresh button too for the map
+
+    if (hashArguments !== undefined) {
+        return `<a href='javascript:void(0)' onclick='changeHash("${hashArguments}")' title='${hashArguments[2]}'>${content}</a>`
+    }
+    else {
+        return `<a href='javascript:void(0)' onclick='setZoom()' title='${REFRESH}'>${content}</a>`
+    }
+
+}
+
+const icon = function (classKey, flag) {
+    let classString = ''
+    let sizeString = ''
+
+    if (classKey !== undefined) {
+        classString = `class = '${classKey}'`
+    }
+
+    if (flag) {
+        sizeString = 'style="font-size:1rem"'
     }
     
-    changeHash = function (hashArguments) {
-        let hash = hashArguments.split(',')
-        let book = books[hash[0]]
-        
-        location.hash = `#${book.parentBookId}:${Number(hash[0])}:${Number(hash[1])}`
+    return `<i ${classString} ${sizeString}></i>`
+}
+
+const init = function (callback) {
+    let booksLoaded = false
+    let volumesLoaded = false
+
+    ajax(URL_BOOKS, data => {
+        books = data
+        booksLoaded = true
+
+        if (volumesLoaded) {
+            cacheBooks(callback)
+        }
+    })
+
+    ajax(URL_VOLUMES, data => {
+        volumes = data
+        volumesLoaded = true
+
+        if (booksLoaded) {
+            cacheBooks(callback)
+        }
+    })
+}
+
+const navigateBook = function (bookID) {
+    let book = books[bookID]
+
+    if (book.numChapters <= 1) {
+        navigateChapter(bookID, book.numChapters)
     }
-
-    chaptersGrid = function (book) {
-        return htmlDiv({
-            classKey: CLASS_VOLUME,
-            content: htmlElement(TAG_HEADER5, book.fullName)
-        }) + htmlDiv({
-            classKey: CLASS_BOOKS,
-            content: chaptersGridContent(book)
-        })
-    }
-
-    chaptersGridContent = function (book) {
-        let gridContent = ''
-        let chapter = 1
-
-        // grab volume for href string
-        let ids = location.hash.slice(1).split(':')
-
-        while (chapter <= book.numChapters) {
-            gridContent += htmlLink({
-                classKey: `${CLASS_BTN} ${CLASS_CHAPTER}`,
-                id: chapter,
-                href: `#${ids[0]}:${book.id}:${chapter}`,
-                content: chapter
-            })
-            chapter += 1
-        }
-
-        return gridContent
-    }
-
-    clearMarkers = function () {
-        gmMarkers.forEach(function (marker) {
-            marker.setMap(null)
-        })
-
-        gmMarkers = []
-
-        map.setCenter(new google.maps.LatLng(31.7683, 35.2137))
-        map.setZoom(8)
-    }
-
-    encodedScripturesUrlParameters = function (bookID, chapter, verses, isJst) {
-        if (bookID !== undefined && chapter !== undefined) {
-            let options = ''
-
-            if (verses !== undefined) {
-                options += verses
-            }
-
-            if (isJst !== undefined) {
-                options += '&jst=JST'
-            }
-
-            return `${URL_SCRIPTURES}?book=${bookID}&chap=${chapter}&verses${options}`
-        }
-    }
-
-    getScripturesCallback = function (chapterHtml) {
-        document.getElementById(DIV_SCRIPTURES).innerHTML = chapterHtml
-
-        let ids = location.hash.slice(1).split(':')
-
-        document.getElementsByClassName(NAV_HEADING)[0].innerHTML += nextIcon(nextChapter(Number(ids[1]), Number(ids[2])), previousChapter(Number(ids[1]), Number(ids[2])))
-        document.getElementsByClassName(NAV_HEADING)[1].innerHTML += nextIcon(nextChapter(Number(ids[1]), Number(ids[2])), previousChapter(Number(ids[1]), Number(ids[2])))
-
-        setupMarkers()
-    }   
-
-    getScripturesFailure = function () {
-        document.getElementById(DIV_SCRIPTURES).innerHTML = 'Unable to retrieve chapter contents.'
-    }
-
-    htmlAnchor = function (volume) {
-        return `<a name='${volume.id}' />`
-    }
-    
-    htmlDiv = function (parameters) {
-        let classString = ''
-        let contentString = ''
-        let idString = ''
-    
-        if (parameters.classKey !== undefined) {
-            classString = `class='${parameters.classKey}'`
-        }
-        if (parameters.content !== undefined) {
-            contentString = parameters.content
-        }
-        if (parameters.id !== undefined) {
-            idString = `id='${parameters.id}'`
-        }
-    
-        return `<div ${idString} ${classString}>${contentString}</div>`
-    }
-    
-    htmlElement = function (tagName, content) {
-        return `<${tagName}>${content}</${tagName}>`
-    }
-    
-    htmlLink = function (parameters) {
-        let classString = ''
-        let contentString = ''
-        let hrefString = ''
-        let idString = ''
-    
-        if (parameters.classKey != undefined) {
-            classString = `class='${parameters.classKey}'`
-        }
-        if (parameters.content !== undefined) {
-            contentString = parameters.content
-        }
-        if (parameters.href !== undefined) {
-            hrefString = `href='${parameters.href}'`
-        }
-        if (parameters.id !== undefined) {
-            idString = `id='${parameters.id}'`
-        }
-    
-        return `<a ${idString} ${classString} ${hrefString}>${contentString}</a>`
-    }
-    
-    htmlHashLink = function (hashArguments, content) {
-        // error with the changeHash function receiving chapter name (missing '') after hashArguments?)
-        // had to add "" around the parameter in the function call
-        // I want a refresh button too for the map
-
-        if (hashArguments !== undefined) {
-            return `<a href='javascript:void(0)' onclick='Scriptures.changeHash("${hashArguments}")' title='${hashArguments[2]}'>${content}</a>`
-        }
-        else {
-            return `<a href='javascript:void(0)' onclick='Scriptures.setZoom()' title='${REFRESH}'>${content}</a>`
-        }
-
-    }
-
-    icon = function (classKey, flag) {
-        let classString = ''
-        let sizeString = ''
-
-        if (classKey !== undefined) {
-            classString = `class = '${classKey}'`
-        }
-
-        if (flag) {
-            sizeString = 'style="font-size:1rem"'
-        }
-        
-        return `<i ${classString} ${sizeString}></i>`
-    }
-
-    init = function (callback) {
-        let booksLoaded = false
-        let volumesLoaded = false
-
-        ajax(URL_BOOKS, data => {
-            books = data
-            booksLoaded = true
-
-            if (volumesLoaded) {
-                cacheBooks(callback)
-            }
-        })
-
-        ajax(URL_VOLUMES, data => {
-            volumes = data
-            volumesLoaded = true
-
-            if (booksLoaded) {
-                cacheBooks(callback)
-            }
-        })
-    }
-
-    navigateBook = function (bookID) {
-        let book = books[bookID]
-
-        if (book.numChapters <= 1) {
-            navigateChapter(bookID, book.numChapters)
-        }
-        else {
-            document.getElementById(DIV_SCRIPTURES).innerHTML = htmlDiv({
-                id: DIV_SCRIPTURES_NAVIGATOR,
-                content: chaptersGrid(book)
-            })
-        }
-
-        let ids = location.hash.slice(1).split(':')
-        let volume = volumes[ids[0] - 1]
-        if (bookID) {
-            document.getElementById('crumb').innerHTML = `${htmlLink({
-                classKey: LINK,
-                id: volume.id,
-                href: `#`,
-                content: NAVIGATION
-            })} > ${htmlLink({
-                classKey: LINK,
-                id: book.id,
-                href: `#${volume.id}`,
-                content: volume.fullName
-            })} > ${book.fullName}` 
-        }
-
-    }
-
-    navigateChapter = function (bookID, chapter) {
-        ajax(encodedScripturesUrlParameters(bookID, chapter), getScripturesCallback, getScripturesFailure, true)
-
-        let ids = location.hash.slice(1).split(':')
-        let volume = volumes[ids[0] - 1]
-        let book = books[bookID]
-        if (chapter) {
-            document.getElementById('crumb').innerHTML = `${htmlLink({
-                classKey: LINK,
-                id: volume.id,
-                href: `#`,
-                content: NAVIGATION
-            })} > ${htmlLink({
-                classKey: LINK,
-                id: book.id,
-                href: `#${volume.id}`,
-                content: volume.fullName
-            })} > ${htmlLink({
-                classKey: LINK,
-                id: chapter,
-                href: `#${volume.id}:${book.id}`,
-                content: book.fullName
-            })} > ${chapter}` 
-        }
-    }
-
-    navigateHome = function (volumeID) {
+    else {
         document.getElementById(DIV_SCRIPTURES).innerHTML = htmlDiv({
             id: DIV_SCRIPTURES_NAVIGATOR,
-            content: volumesGridContent(volumeID)
+            content: chaptersGrid(book)
         })
-
-        document.getElementById('crumb').innerHTML = NAVIGATION
-
-        if (volumeID) {
-            let volume = volumes[volumeID - 1]
-            document.getElementById('crumb').innerHTML = `${htmlLink({
-                classKey: LINK,
-                id: volume.id,
-                href: `#`,
-                content: NAVIGATION
-            })} > ${volume.fullName}` 
-        }
-            
     }
 
-    nextChapter =  function (bookID, chapter) {
-        let book = books[bookID]
+    let ids = location.hash.slice(1).split(':')
+    let volume = volumes[ids[0] - 1]
+    if (bookID) {
+        document.getElementById('crumb').innerHTML = `${htmlLink({
+            classKey: LINK,
+            id: volume.id,
+            href: `#`,
+            content: NAVIGATION
+        })} > ${htmlLink({
+            classKey: LINK,
+            id: book.id,
+            href: `#${volume.id}`,
+            content: volume.fullName
+        })} > ${book.fullName}` 
+    }
 
-        if (book !== undefined) {
-            if (chapter < book.numChapters) {
-                return [
-                    bookID,
-                    chapter + 1,
-                    titleForBookChapter(book, chapter + 1)
-                ]
-            }
-        }
+}
 
-        let nextBook = books[bookID + 1]
+const navigateChapter = function (bookID, chapter) {
+    ajax(encodedScripturesUrlParameters(bookID, chapter), getScripturesCallback, getScripturesFailure, true)
 
-        if (nextBook !== undefined) {
-            let nextChapterValue = 0
+    let ids = location.hash.slice(1).split(':')
+    let volume = volumes[ids[0] - 1]
+    let book = books[bookID]
+    if (chapter) {
+        document.getElementById('crumb').innerHTML = `${htmlLink({
+            classKey: LINK,
+            id: volume.id,
+            href: `#`,
+            content: NAVIGATION
+        })} > ${htmlLink({
+            classKey: LINK,
+            id: book.id,
+            href: `#${volume.id}`,
+            content: volume.fullName
+        })} > ${htmlLink({
+            classKey: LINK,
+            id: chapter,
+            href: `#${volume.id}:${book.id}`,
+            content: book.fullName
+        })} > ${chapter}` 
+    }
+}
 
-            if (nextBook.numChapters > 0) {
-                nextChapterValue = 1
-            }
+const navigateHome = function (volumeID) {
+    document.getElementById(DIV_SCRIPTURES).innerHTML = htmlDiv({
+        id: DIV_SCRIPTURES_NAVIGATOR,
+        content: volumesGridContent(volumeID)
+    })
 
+    document.getElementById('crumb').innerHTML = NAVIGATION
+
+    if (volumeID) {
+        let volume = volumes[volumeID - 1]
+        document.getElementById('crumb').innerHTML = `${htmlLink({
+            classKey: LINK,
+            id: volume.id,
+            href: `#`,
+            content: NAVIGATION
+        })} > ${volume.fullName}` 
+    }
+        
+}
+
+const nextChapter =  function (bookID, chapter) {
+    let book = books[bookID]
+
+    if (book !== undefined) {
+        if (chapter < book.numChapters) {
             return [
-                nextBook.id,
-                nextChapterValue,
-                titleForBookChapter(nextBook, nextChapterValue)
+                bookID,
+                chapter + 1,
+                titleForBookChapter(book, chapter + 1)
             ]
         }
     }
 
-    nextIcon = function (next, previous) {
-        let classString = 'fas fa-chevron-circle-'
-        let refreshString = 'fas fa-sync'
-        let left =  'left'
-        let right = 'right'
+    let nextBook = books[bookID + 1]
 
-        if (next !== undefined && previous !== undefined) {
-            return htmlDiv({
-                classKey: 'nextprev',
-                content: htmlHashLink(previous, icon(classString + left)) + '\t' +
-                    htmlHashLink(undefined, icon(refreshString, true)) + '\t' +
-                    htmlHashLink(next, icon(classString + right))
-            })
+    if (nextBook !== undefined) {
+        let nextChapterValue = 0
+
+        if (nextBook.numChapters > 0) {
+            nextChapterValue = 1
         }
-        else if (next !== undefined) {
-            return htmlDiv({
-                classKey: 'nextprev',
-                content: htmlHashLink(next, icon(classString + right))
-            })
-        }
-        else if (previous !== undefined) {
-            return htmlDiv({
-                classKey: 'nextprev',
-                content: htmlHashLink(previous, icon(classString + left))
-            })
-        }
+
+        return [
+            nextBook.id,
+            nextChapterValue,
+            titleForBookChapter(nextBook, nextChapterValue)
+        ]
+    }
+}
+
+const nextIcon = function (next, previous) {
+    let classString = 'fas fa-chevron-circle-'
+    let refreshString = 'fas fa-sync'
+    let left =  'left'
+    let right = 'right'
+
+    if (next !== undefined && previous !== undefined) {
+        return htmlDiv({
+            classKey: 'nextprev',
+            content: htmlHashLink(previous, icon(classString + left)) + '\t' +
+                htmlHashLink(undefined, icon(refreshString, true)) + '\t' +
+                htmlHashLink(next, icon(classString + right))
+        })
+    }
+    else if (next !== undefined) {
+        return htmlDiv({
+            classKey: 'nextprev',
+            content: htmlHashLink(next, icon(classString + right))
+        })
+    }
+    else if (previous !== undefined) {
+        return htmlDiv({
+            classKey: 'nextprev',
+            content: htmlHashLink(previous, icon(classString + left))
+        })
+    }
+}
+
+const onHashChanged = function () {
+    let ids = []
+    clearMarkers()
+
+    if (!volumes) {
+        return 'no volumes'
     }
 
-    onHashChanged = function () {
-        let ids = []
-        clearMarkers()
+    if (location.hash !== '' && location.hash.length > 1) {
+        ids = location.hash.slice(1).split(':')
+    }
 
-        if (!volumes) {
-            return 'no volumes'
-        }
+    if (ids.length <= 0) {
+        navigateHome()
+    }
+    else if (ids.length === 1) {
+        let volumeID = Number(ids[0])
 
-        if (location.hash !== '' && location.hash.length > 1) {
-            ids = location.hash.slice(1).split(':')
-        }
-
-        if (ids.length <= 0) {
+        if (volumeID < volumes[0].id || volumeID > volumes.slice(-1)[0].id) {
             navigateHome()
         }
-        else if (ids.length === 1) {
-            let volumeID = Number(ids[0])
+        else {
+            navigateHome(volumeID)
+        }
+    }
+    else {
+        let bookID = Number(ids[1])
 
-            if (volumeID < volumes[0].id || volumeID > volumes.slice(-1)[0].id) {
-                navigateHome()
-            }
-            else {
-                navigateHome(volumeID)
-            }
+        if (books[bookID] === undefined) {
+            navigateHome()
         }
         else {
-            let bookID = Number(ids[1])
-
-            if (books[bookID] === undefined) {
-                navigateHome()
+            
+            if (ids.length === 2) {
+                navigateBook(bookID)
             }
             else {
-                
-                if (ids.length === 2) {
-                    navigateBook(bookID)
+                let chapter = Number(ids[2])
+                if (bookChapterValid(bookID, chapter)) {
+                    navigateChapter(bookID, chapter)
                 }
                 else {
-                    let chapter = Number(ids[2])
-                    if (bookChapterValid(bookID, chapter)) {
-                        navigateChapter(bookID, chapter)
-                    }
-                    else {
-                        navigateHome()
-                    }
+                    navigateHome()
                 }
             }
         }
     }
+}
 
-    previousChapter = function (bookID, chapter) {
-        let book = books[bookID]
+const previousChapter = function (bookID, chapter) {
+    let book = books[bookID]
 
-        if (book !== undefined) {
-            if (chapter > 1) {
-                return [
-                    bookID,
-                    chapter - 1,
-                    titleForBookChapter(book, chapter - 1)
-                ]
-            }
+    if (book !== undefined) {
+        if (chapter > 1) {
+            return [
+                bookID,
+                chapter - 1,
+                titleForBookChapter(book, chapter - 1)
+            ]
+        }
 
-            let previousBook = books[bookID - 1]
+        let previousBook = books[bookID - 1]
 
-            if (previousBook !== undefined) {
-                let previousChapterValue = previousBook.numChapters
+        if (previousBook !== undefined) {
+            let previousChapterValue = previousBook.numChapters
 
-                return [
-                    previousBook.id,
-                    previousChapterValue,
-                    titleForBookChapter(previousBook, previousChapterValue)
-                ]
-            }
+            return [
+                previousBook.id,
+                previousChapterValue,
+                titleForBookChapter(previousBook, previousChapterValue)
+            ]
         }
     }
+}
 
-    setupMarkers = function () {
-        if (gmMarkers.length > 0) {
-            clearMarkers()
-        }
+const setupMarkers = function () {
+    if (gmMarkers.length > 0) {
+        clearMarkers()
+    }
 
-        document.querySelectorAll('a[onclick^=\'showLocation(\']').forEach(function (element) {
-            let matches = LAT_LONG_PARSER.exec(element.getAttribute('onclick'))
+    document.querySelectorAll('a[onclick^=\'showLocation(\']').forEach(function (element) {
+        let matches = LAT_LONG_PARSER.exec(element.getAttribute('onclick'))
 
-            if (matches) {
-                let placename = matches[INDEX_PLACENAME]
-                let latitude = matches[INDEX_LATITUDE]
-                let longitude = matches[INDEX_LONGITUDE]
-                let flag = matches[INDEX_FLAG]
+        if (matches) {
+            let placename = matches[INDEX_PLACENAME]
+            let latitude = matches[INDEX_LATITUDE]
+            let longitude = matches[INDEX_LONGITUDE]
+            let flag = matches[INDEX_FLAG]
 
-                if (flag !== '') {
-                    placename = `${placename} ${flag}`
-                }
-
-                addMarker(placename, latitude, longitude)
+            if (flag !== '') {
+                placename = `${placename} ${flag}`
             }
-        })
-        setZoom()
-    }
 
-    setZoom = function () {
-        let bounds = new google.maps.LatLngBounds()
-
-        // in case there is only one marker, need to not zoom in so much
-        if (gmMarkers.length === 1) {
-            bounds.extend(gmMarkers[0].getPosition())
-            map.fitBounds(bounds)
-            map.setZoom(ZOOM_LEVEL)
+            addMarker(placename, latitude, longitude)
         }
-        else {
-            gmMarkers.map(location => {
-                bounds.extend(location.getPosition())
-                map.fitBounds(bounds)
-            })
-        }
-    }
+    })
+    setZoom()
+}
 
-    showLocation = function (geotagId, placename, latitude, longitude, viewLatitude, viewLongitude, viewTilt, viewRoll, viewAltitude, viewHeading) {
-        console.log(geotagId + ' ' + placename + ' ' + latitude + ' ' + longitude + ' ' + viewLatitude + ' ' + viewLongitude + ' ' + viewTilt + ' ' + viewRoll + ' ' + viewAltitude + ' ' + viewHeading)
-        
-        let bounds = new google.maps.LatLngBounds()
+const setZoom = function () {
+    let bounds = new google.maps.LatLngBounds()
 
-        bounds.extend({lat: Number(latitude), lng: Number(longitude)})
+    // in case there is only one marker, need to not zoom in so much
+    if (gmMarkers.length === 1) {
+        bounds.extend(gmMarkers[0].getPosition())
         map.fitBounds(bounds)
         map.setZoom(ZOOM_LEVEL)
     }
-
-    singleMarker = function (placename, latitude, longitude) {
-        let marker = new MarkerWithLabel({
-            position: {lat: Number(latitude), lng: Number(longitude)},
-            clickable: true,
-            draggable: false,
-            map,
-            animation: google.maps.Animation.DROP,
-            labelContent: placename,
-            labelClass: "labels",
-            labelStyle: {
-                opacity: .2,
-                backgroundColor: "white"
-            }
+    else {
+        gmMarkers.map(location => {
+            bounds.extend(location.getPosition())
+            map.fitBounds(bounds)
         })
-
-        gmMarkers.push(marker)
     }
+}
 
-    titleForBookChapter = function (book, chapter) {
-        if (book !== undefined) {
-            if (chapter > 0) {
-                return `${book.tocName} ${chapter}`
-            }
+const showLocation = function (geotagId, placename, latitude, longitude, viewLatitude, viewLongitude, viewTilt, viewRoll, viewAltitude, viewHeading) {
+    console.log(geotagId + ' ' + placename + ' ' + latitude + ' ' + longitude + ' ' + viewLatitude + ' ' + viewLongitude + ' ' + viewTilt + ' ' + viewRoll + ' ' + viewAltitude + ' ' + viewHeading)
+    
+    let bounds = new google.maps.LatLngBounds()
 
-            return book.tocName
+    bounds.extend({lat: Number(latitude), lng: Number(longitude)})
+    map.fitBounds(bounds)
+    map.setZoom(ZOOM_LEVEL)
+}
+
+const singleMarker = function (placename, latitude, longitude) {
+    let marker = new MarkerWithLabel({
+        position: {lat: Number(latitude), lng: Number(longitude)},
+        clickable: true,
+        draggable: false,
+        map,
+        animation: google.maps.Animation.DROP,
+        labelContent: placename,
+        labelClass: "labels",
+        labelStyle: {
+            opacity: .2,
+            backgroundColor: "white"
         }
+    })
+
+    gmMarkers.push(marker)
+}
+
+const titleForBookChapter = function (book, chapter) {
+    if (book !== undefined) {
+        if (chapter > 0) {
+            return `${book.tocName} ${chapter}`
+        }
+
+        return book.tocName
     }
+}
 
-    volumesGridContent = function (volumeID) {
-        let gridContent = ''
+const volumesGridContent = function (volumeID) {
+    let gridContent = ''
 
-        volumes.forEach(function (volume) {
-            if (volumeID === undefined || volumeID === volume.id) {
-                gridContent += htmlDiv({
-                    classKey: CLASS_VOLUME,
-                    content: htmlAnchor(volume) + htmlElement(TAG_HEADER5, volume.fullName)
-                })
+    volumes.forEach(function (volume) {
+        if (volumeID === undefined || volumeID === volume.id) {
+            gridContent += htmlDiv({
+                classKey: CLASS_VOLUME,
+                content: htmlAnchor(volume) + htmlElement(TAG_HEADER5, volume.fullName)
+            })
 
-                gridContent += booksGrid(volume)
-            }
-        })
+            gridContent += booksGrid(volume)
+        }
+    })
 
-        return gridContent + BOTTOM_PADDING
-    }
+    return gridContent + BOTTOM_PADDING
+}
 
-    // public api
+// public api
 
-    return {
-        changeHash,
-        init,
-        onHashChanged,
-        setZoom,
-        showLocation
-    }
-}())
+const Scriptures = {
+    changeHash,
+    init,
+    onHashChanged,
+    setZoom,
+    showLocation
+}
+
+export default Object.freeze(Scriptures)

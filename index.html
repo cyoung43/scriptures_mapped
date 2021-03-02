@@ -42,32 +42,45 @@
     <script type='text/javascript'>
         // global
         let map
+        let showLocation
+        let changeHash
+        let setZoom
 
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
                 center: { lat: 31.7683, lng: 35.2137 },
                 zoom: 8,
-            });
-            }
-
-        function ready (readyListener) {
-            if (document.readyState !== 'loading') {
-                readyListener()
-            }
-            else {
-                document.addEventListener('DOMContentLoaded', readyListener)
-            }
+            })
         }
+    </script>
+    <script type='module'>
+        import('./js/scriptures.js').then(module => {
+            function ready (readyListener) {
+                if (document.readyState !== 'loading') {
+                    readyListener()
+                }
+                else {
+                    document.addEventListener('DOMContentLoaded', readyListener)
+                }
+            }
 
-        function showLocation () {
-            Scriptures.showLocation(...arguments)
-        }
+            ready(function () {
+                module.default.init(() => { module.default.onHashChanged() })
+                window.addEventListener("hashchange", module.default.onHashChanged)
+            })
 
-        ready(function () {
-            Scriptures.init(() => { Scriptures.onHashChanged() })
-            window.addEventListener('hashchange', Scriptures.onHashChanged)
+            showLocation = function () {
+                module.default.showLocation(...arguments)
+            }
+
+            changeHash = function (hashArguments) {
+                module.default.changeHash(hashArguments)
+            }
+
+            setZoom = function () {
+                module.default.setZoom()
+            }
         })
-
     </script>
 </body>
 </html>
