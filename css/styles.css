@@ -86,9 +86,24 @@ div.subtitle {
     height: 100%;
     min-height: 100%;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
     border-right: 1px solid #aaa;
     position: relative;
+}
+
+#s1 {
+    position: absolute;
+    max-height: 100%;
+    height: 100%;
+    width: 100%;
+}
+
+#s2 {
+    position: absolute;
+    max-height: 100%;
+    height: 100%;
+    width: 100%;
+    left: 100%;
 }
 
 #scripnav {
@@ -316,4 +331,31 @@ li.match {
 
 .my-btn {
     border-color: black;
+}
+
+@media (max-width: 600px) {
+    #content {
+        flex-direction: column;
+    }
+
+    #map {
+        height: 100%;
+    }
+
+    #scriptures {
+        height: 30%;
+        min-height: 30%;
+    }
+
+    #header {
+        flex-direction: column;
+        padding-top: .1em;
+    }
+
+    #crumb {
+        align-self: center;
+        flex: 1;
+        order: 10;
+    }
+    
 }

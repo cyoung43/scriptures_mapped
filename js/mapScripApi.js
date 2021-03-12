@@ -27,7 +27,7 @@ const ajax = function (url, successCallBack, failureCallBack, skipJSONparse) {
         }
     ).then(
         result => {
-            successCallBack(result  )
+            successCallBack(result)
         }
     ).catch(
         function (error) {

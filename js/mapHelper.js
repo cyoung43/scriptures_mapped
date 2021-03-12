@@ -9,7 +9,7 @@ const INDEX_LATITUDE = 3
 const INDEX_LONGITUDE = 4
 const INDEX_FLAG = 11
 const LAT_LONG_PARSER = /\((.*),'(.*)',(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),'(.*)'\)/
-const ZOOM_LEVEL = 13
+const ZOOM_LEVEL = 10
 
 // private variables
 let gmMarkers = []
@@ -103,10 +103,12 @@ const setZoom = function () {
 const showLocation = function (geotagId, placename, latitude, longitude, viewLatitude, viewLongitude, viewTilt, viewRoll, viewAltitude, viewHeading) {
     console.log(geotagId + ' ' + placename + ' ' + latitude + ' ' + longitude + ' ' + viewLatitude + ' ' + viewLongitude + ' ' + viewTilt + ' ' + viewRoll + ' ' + viewAltitude + ' ' + viewHeading)
     
-    let bounds = new google.maps.LatLngBounds()
+    // let bounds = new google.maps.LatLngBounds()
+    // bounds.extend({lat: Number(latitude), lng: Number(longitude)})
+    // map.fitBounds(bounds)
 
-    bounds.extend({lat: Number(latitude), lng: Number(longitude)})
-    map.fitBounds(bounds)
+    // change to .panTo function instead of using bounds
+    map.panTo({lat: Number(latitude), lng: Number(longitude)})
     map.setZoom(ZOOM_LEVEL)
 }
 

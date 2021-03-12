@@ -17,10 +17,12 @@ const CLASS_BTN = 'waves-effect my-btn'
 const CLASS_CHAPTER = 'chapter'
 const CLASS_VOLUME = 'volume'
 const DIV_SCRIPTURES_NAVIGATOR = 'scripnav'
-const DIV_SCRIPTURES = 'scriptures'
 const LINK = 'link'
 const NAVIGATION = 'The Scriptures'
 const TAG_HEADER5 = 'h5'
+
+// private variables
+let oldHash = '#1'
 
 // private methods
 const bookChapterValid =  function (bookID, chapter) {
@@ -62,6 +64,7 @@ const booksGridContent = function (volume) {
 const changeHash = function (hashArguments) {
     let hash = hashArguments.split(',')
     let book = books[hash[0]]
+    oldHash = setOldHash(location.hash)
     
     location.hash = `#${book.parentBookId}:${Number(hash[0])}:${Number(hash[1])}`
 }
@@ -96,6 +99,10 @@ const chaptersGridContent = function (book) {
     return gridContent
 }
 
+const getOldHash = function () {
+    return oldHash
+}
+
 const navigateBook = function (bookID) {
     let book = books[bookID]
 
@@ -103,10 +110,11 @@ const navigateBook = function (bookID) {
         chap.navigateChapter(bookID, book.numChapters)
     }
     else {
-        document.getElementById(DIV_SCRIPTURES).innerHTML = html.div({
+        setOldHash('#1')
+        chap.crossfadeAnimation(html.div({
             id: DIV_SCRIPTURES_NAVIGATOR,
             content: chaptersGrid(book)
-        })
+        }))
     }
 
     let ids = location.hash.slice(1).split(':')
@@ -127,10 +135,11 @@ const navigateBook = function (bookID) {
 }
 
 const navigateHome = function (volumeID) {
-    document.getElementById(DIV_SCRIPTURES).innerHTML = html.div({
+    setOldHash('#1')
+    chap.crossfadeAnimation(html.div({
         id: DIV_SCRIPTURES_NAVIGATOR,
         content: volumesGridContent(volumeID)
-    })
+    }))
 
     document.getElementById('crumb').innerHTML = NAVIGATION
 
@@ -158,15 +167,18 @@ const onHashChanged = function () {
     }
 
     if (ids.length <= 0) {
+        oldHash = setOldHash('#1')
         navigateHome()
     }
     else if (ids.length === 1) {
         let volumeID = Number(ids[0])
 
         if (volumeID < volumes[0].id || volumeID > volumes.slice(-1)[0].id) {
+            oldHash = setOldHash('#1')
             navigateHome()
         }
         else {
+            oldHash = setOldHash('#1')
             navigateHome(volumeID)
         }
     }
@@ -177,13 +189,17 @@ const onHashChanged = function () {
             navigateHome()
         }
         else {
-            
             if (ids.length === 2) {
+                oldHash = setOldHash('#1')
                 navigateBook(bookID)
             }
             else {
                 let chapter = Number(ids[2])
+
                 if (bookChapterValid(bookID, chapter)) {
+                    if (getOldHash().split(':').length !== 3) {
+                        oldHash = setOldHash('#1')
+                    }
                     chap.navigateChapter(bookID, chapter)
                 }
                 else {
@@ -192,6 +208,12 @@ const onHashChanged = function () {
             }
         }
     }
+}
+
+const setOldHash = function (hash) {
+    let oldHash = hash
+
+    return oldHash
 }
 
 const volumesGridContent = function (volumeID) {
@@ -214,6 +236,7 @@ const volumesGridContent = function (volumeID) {
 // api
 const navigation = {
     changeHash,
+    getOldHash,
     onHashChanged
 }
 
