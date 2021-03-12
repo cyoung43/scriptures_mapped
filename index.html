@@ -17,6 +17,7 @@
     <link rel='stylesheet' href='/css/styles.css' />
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
     <!-- Link in font awesome icon set -->
     <script src="https://kit.fontawesome.com/d13a24eb34.js" crossorigin="anonymous"></script>
     <!-- MDB -->
@@ -42,11 +43,20 @@
         </div>
     </div>
     <div id='content'>
-        <div id='scriptures'>
+        <div id='scriptures' class='collapse show'>
             <div id='s1'></div>
             <div id='s2'></div>
         </div>
-        <div id='map'></div>
+        <div id='map' class='collapse show'>
+        </div>
+        <div id='collapse'>
+            <button data-bs-toggle='collapse' type='button' data-bs-target='#scriptures' id='btn-collapse1' aria-expanded="false" aria-controls='scriptures' title='Collapse/Expand Scriptures'>
+                <i class="far fa-arrow-alt-circle-up"></i>
+            </button>
+            <button id='btn-collapse2' data-bs-toggle='collapse' type='button' data-bs-target='#map' aria-expanded="true" aria-controls='map' title='Collapse/Expand Map'>
+                <i class="far fa-arrow-alt-circle-down"></i>
+            </button>
+        </div>
     </div>
     <script src='./js/scriptures.js'></script>
     <script type='text/javascript'>
