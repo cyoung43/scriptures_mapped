@@ -7,5 +7,11 @@ I learned several things through the course of this project. I have never felt '
 * I learned about `@media` queries. I have seen these frequently, but have never required the use of them in any of my prior projects. While my understanding still seems limited (I only used it for querying screen sizes), media queries actually have a lot of power to select custom rules for what you want. MDN says `Media features describe specific characteristics of the user agent, output device, or environment. Media feature expressions test for their presence or value, and are entirely optional.`
 * I also learned about modularization and how to divide my code into logical segments. While implementing the transitions, I had to use a `setter` and `getter` to access the old hash value (from which I determined if I needed to slide right or left). I found this interesting to work with across modules, but eventually figured it out.
 
+### Project Extra Features
+For this project I added the following additional features:
+1. Customized the CSS to use my own color themes and button animations (also integrated Bootstrap into the project).
+2. Utilized 3 media queries to specify screen-size rules (`<600px; <740px; >741px;`)
+3. On the smallest media queries, I used Bootstrap's `collapse` classes to add buttons for the user to collapse either the scriptures or the map, depending on preferences. This was also included in the medium-sized screens. I felt like this enhanced the UX for users to see more clearly their interest on the site, whether that be additional map or scripture size.
+
 ### Summary
 All in all, I really enjoyed this piece of the project because it was definitely out of my comfort zone and I feel like I learned a lot about css and styling in this project.
